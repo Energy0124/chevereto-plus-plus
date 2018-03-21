@@ -7,6 +7,7 @@ module.exports = {
         options: path.join(__dirname, 'src/options.ts'),
         content_script: path.join(__dirname, 'src/content_script.ts'),
         background: path.join(__dirname, 'src/background.ts'),
+        // inject: path.join(__dirname, 'src/inject.ts'),
         vendor: ['moment', 'jquery']
     },
     output: {
