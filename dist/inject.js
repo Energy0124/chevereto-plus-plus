@@ -372,7 +372,7 @@ CHV.fn.uploader.add = (function () {
 
         // more of your code
         // console.log("added!");
-
+        // todo: check case for url image
         $("#anywhere-upload-queue .queue-item").each(function () {
 
             if ($("button", this).length == 0) {
