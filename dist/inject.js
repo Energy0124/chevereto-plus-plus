@@ -413,22 +413,7 @@ CHV.fn.uploader.add = (function () {
                             // if (CHV.fn.uploader.files[0]) {
                             //     reader.readAsDataURL(CHV.fn.uploader.files[0]);
                             // }
-                            function groupRender(id) {
-                                Caman("#camam-canvas", function () {
-                                    this.reloadCanvasData();
-                                    Object.entries(CamamCHV.filters[id]).forEach(function ([filter, value]) {
-                                        console.log(filter + ": " + value);
-                                        if (filter != 0 && value != 0) {
-                                            this[filter](value);
-                                        }
 
-                                        // this.brightness(current_value).render();
-
-                                    }, this);
-                                    this.render();
-                                    this.revert(false);
-                                });
-                            }
 
                             Object.entries(CamamCHV.filters[id]).forEach(function ([filter, value]) {
                                 console.log(`${filter}: ${value}`);
@@ -436,6 +421,24 @@ CHV.fn.uploader.add = (function () {
                                     let current_value = $(this).val();
                                     $(this).next().html(current_value);
                                     CamamCHV.filters[id][filter] = parseInt(current_value);
+                                    function groupRender(id) {
+                                        Caman("#camam-canvas", function () {
+                                            // this.reloadCanvasData();
+                                            this.reset();
+                                            Object.entries(CamamCHV.filters[id]).forEach(function ([filter, value]) {
+
+                                                if (filter != 0 && value != 0) {
+                                                    console.log(filter + ": " + value);
+                                                    this[filter](value);
+                                                }
+
+                                                // this.brightness(current_value).render();
+
+                                            }, this);
+                                            this.render();
+                                            this.revert(false);
+                                        });
+                                    }
                                     groupRender(id);
 
                                 });
@@ -480,7 +483,7 @@ CHV.fn.uploader.add = (function () {
                         template: `
 
 <span class="modal-box-title">Edit image</span>
-<canvas id="camam-canvas" data-caman-hidpi="" width="600" height="600" data-caman-id="0"></canvas>
+<canvas id="camam-canvas" data-caman-hidpi-disabled width="600" height="600"></canvas>
 <img id="preview-camam">
 <style>
     #Filters {
