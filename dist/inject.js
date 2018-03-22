@@ -396,8 +396,9 @@ CHV.fn.uploader.add = (function () {
                             sharpen: 0,
                             stackBlur: 0
                         };
-                        CamanCHV.presets[id] = ""
+
                     }
+                    CamanCHV.presets[id] = ""
                     // console.log(id);
                     PF.fn.modal.call({
                         type: "html",
