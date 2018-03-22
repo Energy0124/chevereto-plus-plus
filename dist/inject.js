@@ -327,9 +327,27 @@ function drawImageProp(ctx, img, x, y, w, h, offsetX, offsetY) {
     ctx.drawImage(img, cx, cy, cw, ch, x, y, w, h);
 }
 
-CamamCHV = {};
-CamamCHV.filters = [];
-// CamamCHV.filters[0] = {
+CamanCHV = {};
+// CamanCHV.defaultFilters = {
+//     brightness: 0,
+//     contrast: 0,
+//     saturation: 0,
+//     vibrance: 0,
+//     exposure: 0,
+//     hue: 0,
+//     sepia: 0,
+//     gamma: 0,
+//     noise: 0,
+//     clip: 0,
+//     sharpen: 0,
+//     stackBlur: 0
+// };
+CamanCHV.filters = [];
+CamanCHV.presets = [];
+
+CamanCHV.filtersTEMP = [];
+CamanCHV.presetsTEMP = [];
+// CamanCHV.filters[0] = {
 //     brightness: 0,
 //     contrast: 0,
 //     saturation: 0,
@@ -363,34 +381,72 @@ CHV.fn.uploader.add = (function () {
                 $(this).append("<button class=\"btn btn-small green\" >Edit</button>");
                 $("button", this).click(0, function (e) {
                     let id = $(this).closest("li").attr("data-id");
-                    CamamCHV.filters[id] = {
-                        brightness: 0,
-                        contrast: 0,
-                        saturation: 0,
-                        vibrance: 0,
-                        exposure: 0,
-                        hue: 0,
-                        sepia: 0,
-                        gamma: 0,
-                        noise: 0,
-                        clip: 0,
-                        sharpen: 0,
-                        stackBlur: 0
-                    };
+                    if (CamanCHV.filters[id] === undefined) {
+                        CamanCHV.filters[id] = {
+                            brightness: 0,
+                            contrast: 0,
+                            saturation: 0,
+                            vibrance: 0,
+                            exposure: 0,
+                            hue: 0,
+                            sepia: 0,
+                            gamma: 0,
+                            noise: 0,
+                            clip: 0,
+                            sharpen: 0,
+                            stackBlur: 0
+                        };
+                        CamanCHV.presets[id] = ""
+                    }
                     // console.log(id);
                     PF.fn.modal.call({
                         type: "html",
+                        confirm: function () {
+                            let originalFile = CHV.fn.uploader.files[id];
+                            let canvas = document.getElementById('camam-canvas');
+                            canvas.toBlob(function (myBlob) {
+                                let file = new File([myBlob], originalFile.name, {
+                                    type: originalFile.type,
+                                    lastModified: originalFile.lastModified
+                                });
+                                file.parsedMeta = originalFile.parsedMeta;
+                                CHV.fn.uploader.files[id] = file;
+                                let source_canvas = $(".queue-item[data-id=" + id + "] .preview .canvas")[0];
+                                let source_canvas_context = source_canvas.getContext('2d');
+
+                                source_canvas_context.drawImage(canvas, 0, 0, source_canvas.width, source_canvas.height)
+                                $(".queue-item[data-id=" + id + "]").data("filters", CamanCHV.filters[id]);
+                                PF.fn.modal.close();
+                            });
+                        },
                         callback: function () {
-
+                            // Object.entries(CamanCHV.filters[id]).forEach(function ([filter, value]) {
+                            //     let slider_input = $(`input[data-filter=${filter}]`).each(function () {
+                            //             $(this).val(value);
+                            //             $(this).next().html(value);
+                            //         }
+                            //     )
+                            //
+                            // });
                             let target_canvas = document.getElementById('camam-canvas').getContext('2d');
-                            let source_canvas = $(".queue-item[data-id=" + id + "] .preview .canvas")[0];
+                            // let source_canvas = $(".queue-item[data-id=" + id + "] .preview .canvas")[0];
                             let myCanvas = document.getElementById('camam-canvas');
-                            myCanvas.width = source_canvas.width;
-                            myCanvas.height = source_canvas.height;
+                            // myCanvas.width = source_canvas.width;
+                            // myCanvas.height = source_canvas.height;
 
-                            target_canvas.width = source_canvas.width;
-                            target_canvas.height = source_canvas.height;
-                            target_canvas.drawImage(source_canvas, 0, 0);
+                            // target_canvas.width = source_canvas.width;
+                            // target_canvas.height = source_canvas.height;
+                            //target_canvas.drawImage(source_canvas, 0, 0);
+
+                            //  var ctx = document.getElementById('canvas').getContext('2d');
+                            let img = new Image;
+                            img.onload = function () {
+                                myCanvas.width = img.width;
+                                myCanvas.height = img.height;
+                                target_canvas.drawImage(img, 0, 0);
+
+                            };
+                            img.src = URL.createObjectURL(CHV.fn.uploader.files[id]);
                             // // var preview = document.getElementById('preview-camam');
                             // let reader = new FileReader();
                             //
@@ -413,35 +469,107 @@ CHV.fn.uploader.add = (function () {
                             // if (CHV.fn.uploader.files[0]) {
                             //     reader.readAsDataURL(CHV.fn.uploader.files[0]);
                             // }
+                            function groupRender(id) {
+                                Caman("#camam-canvas", function () {
+                                    // this.reloadCanvasData();
+                                    // this.reset();
+                                    let preset = CamanCHV.presets[id]
+                                    if (preset != "") {
+                                        this[preset]();
+                                    }
+
+                                    Object.entries(CamanCHV.filters[id]).forEach(function ([filter, value]) {
+
+                                        if (filter != 0 && value != 0) {
+                                            // console.log(filter + ": " + value);
+                                            this[filter](value);
+                                        }
+
+                                        // this.brightness(current_value).render();
+
+                                    }, this);
+                                    this.render();
+                                    this.revert(false);
+                                });
+                            }
 
 
-                            Object.entries(CamamCHV.filters[id]).forEach(function ([filter, value]) {
-                                console.log(`${filter}: ${value}`);
-                                $(`input[data-filter=${filter}]`).change(function () {
+                            $("button[data-action=upload], div.upload-box-close").click(function () {
+                                CamanCHV.filters = [];
+                                CamanCHV.presets = [];
+                            });
+                            $(`#reset-image`).click(function () {
+                                Caman("#camam-canvas", function () {
+                                    CamanCHV.filters[id] = {
+                                        brightness: 0,
+                                        contrast: 0,
+                                        saturation: 0,
+                                        vibrance: 0,
+                                        exposure: 0,
+                                        hue: 0,
+                                        sepia: 0,
+                                        gamma: 0,
+                                        noise: 0,
+                                        clip: 0,
+                                        sharpen: 0,
+                                        stackBlur: 0
+                                    };
+                                    CamanCHV.presets[id] = "";
+                                    Object.entries(CamanCHV.filters[id]).forEach(function ([filter, value]) {
+                                        let $filter_input = $(`input[data-filter=${filter}]`);
+                                        let newValue = CamanCHV.filters[id][filter];
+                                        $filter_input.val(newValue).next().html(newValue);
+                                    });
+                                    $(`#PresetFilters`).find(`a`).removeClass("active");
+                                    this.revert();
+                                });
+
+                            });
+                            $(`#PresetFilters`).find(`a`).click(function () {
+
+                                $(`#PresetFilters`).find(`a`).removeClass("active");
+                                $(this).addClass("active");
+                                CamanCHV.presets[id] = $(this).data("preset");
+                                groupRender(id)
+                            });
+
+                            let filterData = $(".queue-item[data-id=" + id + "]").data("filters");
+                            if (filterData !== undefined) {
+                                CamanCHV.filters[id] = filterData;
+                            } else {
+                                CamanCHV.filters[id] = {
+                                    brightness: 0,
+                                    contrast: 0,
+                                    saturation: 0,
+                                    vibrance: 0,
+                                    exposure: 0,
+                                    hue: 0,
+                                    sepia: 0,
+                                    gamma: 0,
+                                    noise: 0,
+                                    clip: 0,
+                                    sharpen: 0,
+                                    stackBlur: 0
+                                };
+                            }
+
+                            Object.entries(CamanCHV.filters[id]).forEach(function ([filter, value]) {
+                                // console.log(`${filter}: ${value}`);
+
+                                let $filter_input = $(`input[data-filter=${filter}]`);
+
+                                $filter_input.val(value).next().html(value);
+
+                                $filter_input.change(function () {
                                     let current_value = $(this).val();
                                     $(this).next().html(current_value);
-                                    CamamCHV.filters[id][filter] = parseInt(current_value);
-                                    function groupRender(id) {
-                                        Caman("#camam-canvas", function () {
-                                            // this.reloadCanvasData();
-                                            this.reset();
-                                            Object.entries(CamamCHV.filters[id]).forEach(function ([filter, value]) {
+                                    CamanCHV.filters[id][filter] = parseInt(current_value);
 
-                                                if (filter != 0 && value != 0) {
-                                                    console.log(filter + ": " + value);
-                                                    this[filter](value);
-                                                }
 
-                                                // this.brightness(current_value).render();
-
-                                            }, this);
-                                            this.render();
-                                            this.revert(false);
-                                        });
-                                    }
                                     groupRender(id);
 
-                                });
+                                })
+                                // $(`input[data-filter=${filter}]`).val(value);
                             });
 
                             // $("input[data-filter='contrast']").change(function () {
@@ -483,7 +611,7 @@ CHV.fn.uploader.add = (function () {
                         template: `
 
 <span class="modal-box-title">Edit image</span>
-<canvas id="camam-canvas" data-caman-hidpi-disabled width="600" height="600"></canvas>
+<div class="image-preview"><canvas id="camam-canvas" class="canvas" data-caman-hidpi-disabled ></canvas></div>
 <img id="preview-camam">
 <style>
     #Filters {
@@ -503,7 +631,7 @@ CHV.fn.uploader.add = (function () {
 
     #PresetFilters a {
         flex: initial;
-        padding: 10px;
+        margin: 10px;
     }
 
 </style>
@@ -648,46 +776,48 @@ CHV.fn.uploader.add = (function () {
 
     <div id="PresetFilters" _vimium-has-onclick-listener="">
 
-        <a data-preset="vintage">Vintage</a>
+        <a data-preset="vintage" class="btn btn-small blue" href="#" >Vintage</a>
 
-        <a data-preset="lomo">Lomo</a>
+        <a data-preset="lomo" class="btn btn-small blue" href="#" >Lomo</a>
 
-        <a data-preset="clarity">Clarity</a>
+        <a data-preset="clarity" class="btn btn-small blue" href="#">Clarity</a>
 
-        <a data-preset="sinCity">Sin City</a>
+        <a data-preset="sinCity" class="btn btn-small blue" href="#">Sin City</a>
 
-        <a data-preset="sunrise">Sunrise</a>
+        <a data-preset="sunrise" class="btn btn-small blue" href="#">Sunrise</a>
 
-        <a data-preset="crossProcess">Cross Process</a>
+        <a data-preset="crossProcess" class="btn btn-small blue" href="#">Cross Process</a>
 
-        <a data-preset="orangePeel">Orange Peel</a>
+        <a data-preset="orangePeel" class="btn btn-small blue" href="#">Orange Peel</a>
 
-        <a data-preset="love">Love</a>
+        <a data-preset="love" class="btn btn-small blue" href="#">Love</a>
 
-        <a data-preset="grungy"> Grungy</a>
+        <a data-preset="grungy" class="btn btn-small blue" href="#"> Grungy</a>
 
-        <a data-preset="jarques">Jarques</a>
+        <a data-preset="jarques" class="btn btn-small blue" href="#">Jarques</a>
 
-        <a data-preset="pinhole">Pinhole</a>
+        <a data-preset="pinhole" class="btn btn-small blue" href="#">Pinhole</a>
 
-        <a data-preset="oldBoot">Old Boot</a>
+        <a data-preset="oldBoot" class="btn btn-small blue" href="#">Old Boot</a>
 
-        <a data-preset="glowingSun">Glowing Sun</a>
+        <a data-preset="glowingSun" class="btn btn-small blue" href="#">Glowing Sun</a>
 
-        <a data-preset="hazyDays">Hazy Days</a>
+        <a data-preset="hazyDays" class="btn btn-small blue" href="#">Hazy Days</a>
 
-        <a data-preset="herMajesty">Her Majesty</a>
+        <a data-preset="herMajesty" class="btn btn-small blue" href="#">Her Majesty</a>
 
-        <a data-preset="nostalgia">Nostalgia</a>
+        <a data-preset="nostalgia" class="btn btn-small blue" href="#">Nostalgia</a>
 
-        <a data-preset="hemingway">Hemingway</a>
+        <a data-preset="hemingway" class="btn btn-small blue" href="#">Hemingway</a>
 
-        <a data-preset="concentrate">Concentrate</a>
+        <a data-preset="concentrate" class="btn btn-small blue" href="#">Concentrate</a>
 
     </div>
 
 </div>
-
+<div>
+<button id="reset-image" class="btn btn-medium">Original Image</button>
+</div>
 `
                     })
 
