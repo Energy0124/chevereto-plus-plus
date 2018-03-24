@@ -1,3 +1,50 @@
+(function (send_event_name, reply_event_name) {
+    // NOTE: This function is serialized and runs in the page's context
+    // Begin of the page's functionality
+    window['convertToDataUrl'] = function (string) {
+        sendMessage({
+            type: 'toDataUrl',
+            data: string
+        }, function (response) {
+            // alert('Background said: ' + response);
+            // console.log(response);
+            var event = new CustomEvent('getDataFromBackground', {detail: response});
+            window.dispatchEvent(event);
+        });
+    };
+
+    window.hello = function (string) {
+        sendMessage({
+            type: 'sayhello',
+            data: string
+        }, function (response) {
+            alert('Background said: ' + response);
+        });
+    };
+
+    // End of your logic, begin of messaging implementation:
+    function sendMessage(message, callback) {
+        var transporter = document.createElement('dummy');
+        // Handles reply:
+        transporter.addEventListener(reply_event_name, function (event) {
+            var result = this.getAttribute('result');
+            if (this.parentNode)
+                this.parentNode.removeChild(this);
+            // After having cleaned up, send callback if needed:
+            if (typeof callback == 'function') {
+                result = JSON.parse(result);
+                callback(result);
+            }
+        });
+        // Functionality to notify content script
+        var event = document.createEvent('Events');
+        event.initEvent(send_event_name, true, false);
+        transporter.setAttribute('data', JSON.stringify(message));
+        (document.body || document.documentElement).appendChild(transporter);
+        transporter.dispatchEvent(event);
+    }
+})("__rw_chrome_ext_1521921138510", "__rw_chrome_ext_reply_1521921138510");
+
 CamanCHV = {};
 // CamanCHV.defaultFilters = {
 //     brightness: 0,
@@ -54,8 +101,35 @@ CHV.fn.uploader.add = (function () {
 
                 check(function (fileId) {
                     // It's there now, use it
-                    CamanCHV.files[fileId] = $.extend(true, [], CHV.fn.uploader.files)[fileId];
-                    console.log(fileId);
+                    let f = CHV.fn.uploader.files[fileId];
+                    let queue_is_url = typeof f.url !== "undefined";
+
+                    if (queue_is_url) {
+                        // hello();
+
+                        convertToDataUrl(f.url);
+                        window.addEventListener("getDataFromBackground", function (e) {
+                            let url = e.detail;
+                            fetch(url)
+                                .then(res => res.blob())
+                                .then(function (blob) {
+                                    let originalFile = CHV.fn.uploader.files[fileId];
+                                    let file = new File([blob], originalFile.name, {
+                                        type: originalFile.type,
+                                        lastModified: originalFile.lastModified
+                                    });
+                                    file.parsedMeta = originalFile.parsedMeta;
+                                    file.formValues = originalFile.formValues;
+                                    CHV.fn.uploader.files[fileId] = file;
+                                    CamanCHV.files[fileId] = $.extend(true, [], CHV.fn.uploader.files)[fileId];
+                                })
+                        });
+                    } else {
+
+                        CamanCHV.files[fileId] = $.extend(true, [], CHV.fn.uploader.files)[fileId];
+                        // console.log(fileId);
+                    }
+
 
                 }, $(this));
 
@@ -104,67 +178,79 @@ CHV.fn.uploader.add = (function () {
                     // console.log(id);
                     PF.fn.modal.call({
                         type: "html",
-                        confirm: function () {
-                            let originalFile = CHV.fn.uploader.files[id];
-                            let canvas = document.getElementById('camam-canvas');
-                            canvas.toBlob(function (myBlob) {
-                                let file = new File([myBlob], originalFile.name, {
-                                    type: originalFile.type,
-                                    lastModified: originalFile.lastModified
-                                });
-                                file.parsedMeta = originalFile.parsedMeta;
-                                CHV.fn.uploader.files[id] = file;
-                                let source_canvas = $(".queue-item[data-id=" + id + "] .preview .canvas")[0];
-                                let source_canvas_context = source_canvas.getContext('2d');
-
-                                source_canvas_context.drawImage(canvas, 0, 0, source_canvas.width, source_canvas.height)
-                                $(".queue-item[data-id=" + id + "]").data("filters", CamanCHV.filters[id]);
-
-                                CamanCHV.filters[id] = {
-                                    brightness: 0,
-                                    contrast: 0,
-                                    saturation: 0,
-                                    vibrance: 0,
-                                    exposure: 0,
-                                    hue: 0,
-                                    sepia: 0,
-                                    gamma: 0,
-                                    noise: 0,
-                                    clip: 0,
-                                    sharpen: 0,
-                                    stackBlur: 0
-                                };
-
-                                let preset = CamanCHV.presets[id];
-                                if (preset != "") {
-                                    Caman("#camam-canvas", function () {
-                                        this.reset();
-                                        this[preset]();
-                                        this.render(function () {
-                                            let canvas = document.getElementById('camam-canvas');
-                                            canvas.toBlob(function (myBlob) {
-                                                let file2 = new File([myBlob], originalFile.name, {
-                                                    type: originalFile.type,
-                                                    lastModified: originalFile.lastModified
-                                                });
-                                                file2.parsedMeta = originalFile.parsedMeta;
-                                                CamanCHV.files[id] = file2;
-                                                PF.fn.modal.close();
-                                            });
-                                        });
-                                        // this.revert(false);
-                                        CamanCHV.presets[id] = "";
-                                    });
-                                } else {
-                                    CamanCHV.presets[id] = "";
-                                    PF.fn.modal.close();
-                                }
-
-                            });
-                        },
                         callback: function () {
+                            // hello();
+                            function doneEditing() {
+                                let originalFile = CHV.fn.uploader.files[id];
+                                let canvas = document.getElementById('caman-canvas');
+                                canvas.toBlob(function (myBlob) {
+                                    let file = new File([myBlob], originalFile.name, {
+                                        type: originalFile.type,
+                                        lastModified: originalFile.lastModified
+                                    });
+                                    file.parsedMeta = originalFile.parsedMeta;
+                                    file.formValues = originalFile.formValues;
+                                    CHV.fn.uploader.files[id] = file;
+                                    let source_canvas = $(".queue-item[data-id=" + id + "] .preview .canvas")[0];
+                                    let source_canvas_context = source_canvas.getContext('2d');
+
+                                    source_canvas_context.drawImage(canvas, 0, 0, source_canvas.width, source_canvas.height)
+                                    $(".queue-item[data-id=" + id + "]").data("filters", CamanCHV.filters[id]);
+
+                                    CamanCHV.filters[id] = {
+                                        brightness: 0,
+                                        contrast: 0,
+                                        saturation: 0,
+                                        vibrance: 0,
+                                        exposure: 0,
+                                        hue: 0,
+                                        sepia: 0,
+                                        gamma: 0,
+                                        noise: 0,
+                                        clip: 0,
+                                        sharpen: 0,
+                                        stackBlur: 0
+                                    };
+
+                                    let preset = CamanCHV.presets[id];
+                                    if (preset != "") {
+                                        Caman("#caman-canvas", function () {
+                                            this.reset();
+                                            this[preset]();
+                                            this.render(function () {
+                                                let canvas = document.getElementById('caman-canvas');
+                                                canvas.toBlob(function (myBlob) {
+                                                    let file2 = new File([myBlob], originalFile.name, {
+                                                        type: originalFile.type,
+                                                        lastModified: originalFile.lastModified
+                                                    });
+                                                    file2.parsedMeta = originalFile.parsedMeta;
+                                                    file2.formValues = originalFile.formValues;
+                                                    CamanCHV.files[id] = file2;
+                                                    PF.fn.modal.close();
+                                                });
+                                            });
+                                            // this.revert(false);
+                                            CamanCHV.presets[id] = "";
+                                        });
+                                    } else {
+                                        CamanCHV.presets[id] = "";
+                                        PF.fn.modal.close();
+                                    }
+
+                                });
+                            }
+
+                            $("button[data-action=submit]").parent()
+                                .prepend("<span class=\"btn-alt\"><a id='save'>Save</a></span>")
+                                .find("#save")
+                                .click(function () {
+                                    doneEditing();
+                                });
+                            $("button[data-action=submit]").remove();
+
                             function groupRender(id) {
-                                Caman("#camam-canvas", function () {
+                                Caman("#caman-canvas", function () {
                                     // this.reloadCanvasData();
                                     // this.reset();
                                     let preset = CamanCHV.presets[id]
@@ -221,9 +307,9 @@ CHV.fn.uploader.add = (function () {
                             //     )
                             //
                             // });
-                            let target_canvas = document.getElementById('camam-canvas').getContext('2d');
+                            let target_canvas = document.getElementById('caman-canvas').getContext('2d');
                             // let source_canvas = $(".queue-item[data-id=" + id + "] .preview .canvas")[0];
-                            let myCanvas = document.getElementById('camam-canvas');
+                            let myCanvas = document.getElementById('caman-canvas');
                             // myCanvas.width = source_canvas.width;
                             // myCanvas.height = source_canvas.height;
 
@@ -243,12 +329,12 @@ CHV.fn.uploader.add = (function () {
                             // img.src = URL.createObjectURL(CHV.fn.uploader.files[id]);
                             img.src = URL.createObjectURL(CamanCHV.files[id]);
 
-                            // // var preview = document.getElementById('preview-camam');
+                            // // var preview = document.getElementById('preview-caman');
                             // let reader = new FileReader();
                             //
                             // reader.addEventListener("load", function () {
                             //     // preview.src = reader.result;
-                            //     let myCanvas = document.getElementById('camam-canvas');
+                            //     let myCanvas = document.getElementById('caman-canvas');
                             //     let ctx = myCanvas.getContext('2d');
                             //
                             //
@@ -272,7 +358,7 @@ CHV.fn.uploader.add = (function () {
                                 CamanCHV.presets = [];
                             });
                             $(`#reset-image`).click(function () {
-                                Caman("#camam-canvas", function () {
+                                Caman("#caman-canvas", function () {
                                     CamanCHV.filters[id] = {
                                         brightness: 0,
                                         contrast: 0,
@@ -331,8 +417,8 @@ CHV.fn.uploader.add = (function () {
                         template: `
 
 <span class="modal-box-title">Edit image</span>
-<div class="image-preview"><canvas id="camam-canvas" class="canvas" data-caman-hidpi-disabled ></canvas></div>
-<img id="preview-camam">
+<div class="image-preview"><canvas id="caman-canvas" class="canvas" data-caman-hidpi-disabled ></canvas></div>
+<img id="preview-caman">
 <style>
     #Filters {
         flex-wrap: wrap;
