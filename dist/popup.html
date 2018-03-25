@@ -8,11 +8,37 @@
             font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
             font-size: 100%;
         }
+
+        .permalink_section {
+            width: 600px;
+            white-space: pre-wrap; /* css-3 */
+            white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+            white-space: -o-pre-wrap; /* Opera 7 */
+            word-wrap: break-word; /* Internet Explorer 5.5+ */
+
+        }
+
     </style>
     <script src="js/vendor.js"></script>
 </head>
-<body style="min-width: 300px;">
-<button id="option">Setting</button>
+<body style="min-width: 900px;max-width: 900px;width: 900px">
+
+Number of images in queue: <span id="queueCount">0</span>
+<ul>
+    <li>
+        <button id="upload">Upload to Chevereto</button>
+    </li>
+    <li>
+        <button id="showUploadQueue">Show upload queue</button>
+        <div id="queue" style="display: none;">
+            <ul class="permalink_section"></ul>
+        </div>
+
+    </li>
+    <li>
+        <button id="option">Setting</button>
+    </li>
+</ul>
 <!--<ul style="min-width: 300px;">-->
 <!--<li>Current URL: <span id="url"></span></li>-->
 <!--<li>Current Time: <span id="time"></span></li>-->

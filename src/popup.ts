@@ -1,11 +1,32 @@
 import * as $ from 'jquery';
+import htmlString = JQuery.htmlString;
 
 // let count = 0;
 
 $(function () {
+    let uploadQueue = [];
+    chrome.storage.sync.get(['uploadQueue'], function (result) {
+        console.log('Value currently is ' + result.uploadQueue);
 
+        uploadQueue = result.uploadQueue;
+        if (uploadQueue === undefined) {
+            uploadQueue = [];
+        }
+        console.log(uploadQueue);
+        $("#queueCount").html(uploadQueue.length.toString());
+
+        $("#queue").find("ul").html("");
+        uploadQueue.forEach(function (element) {
+            $("#queue").find("ul").append(`<li><a href="${element}">${element}</a></li>`)
+        });
+
+    });
     $('#option').click(() => {
         chrome.runtime.openOptionsPage();
+    });
+
+    $('#showUploadQueue').click(() => {
+        $("#queue").slideToggle();
     });
     // const queryInfo = {
     //     active: true,
@@ -17,7 +38,24 @@ $(function () {
     //     $('#time').text(moment().format('YYYY-MM-DD HH:mm:ss'));
     // });
     //
-    // chrome.browserAction.setBadgeText({text: '' + count});
+
+
+    chrome.storage.onChanged.addListener(function (changes, namespace) {
+        if ("uploadQueue" in changes) {
+            let storageChange = changes["uploadQueue"];
+            console.log('Storage key "%s" in namespace "%s" changed. ' +
+                'Old value was "%s", new value is "%s".',
+                "uploadQueue",
+                namespace,
+                storageChange.oldValue,
+                storageChange.newValue);
+
+            // uploadQueue = storageChange.newValue;
+            // count = uploadQueue.length;
+            // chrome.browserAction.setBadgeText({text: '' + count});
+        }
+
+    });
     // $('#countUp').click(() => {
     //     chrome.browserAction.setBadgeText({text: '' + count++});
     // });

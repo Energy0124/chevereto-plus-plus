@@ -20,6 +20,20 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 */
 
 
+chrome.storage.sync.get(['uploadQueue'], function (result) {
+    console.log('Value currently is ' + result.uploadQueue);
+    let uploadQueue = [];
+    uploadQueue = result.uploadQueue;
+    if (uploadQueue === undefined) {
+        uploadQueue = [];
+    }
+
+    let count = uploadQueue.length;
+    chrome.browserAction.setBadgeText({text: '' + count});
+
+});
+
+
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (message && message.type == 'page') {
         var page_message = message.message;
@@ -49,11 +63,43 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     }
 });
 
+// The onClicked callback function.
+function onClickHandler(info, tab) {
 
-// function polling() {
-//     console.log('polling');
-//     setTimeout(polling, 1000 * 30);
-// }
-//
-// polling();
+    let uploadQueue = [];
+    chrome.storage.sync.get(['uploadQueue'], function (result) {
+        console.log('Value currently is ' + result.uploadQueue);
+        uploadQueue = result.uploadQueue;
+        if (uploadQueue === undefined) {
+            uploadQueue = [];
+        }
+        uploadQueue.push(info.srcUrl);
+        chrome.storage.sync.set({uploadQueue: uploadQueue}, function () {
+            console.log('Value is set to ' + uploadQueue);
 
+            let count = uploadQueue.length;
+            chrome.browserAction.setBadgeText({text: '' + count});
+        });
+    });
+
+
+    // console.log("item " + info.menuItemId + " was clicked");
+    // console.log("info: " + JSON.stringify(info));
+    // console.log("tab: " + JSON.stringify(tab));
+
+}
+
+chrome.contextMenus.onClicked.addListener(onClickHandler);
+
+// Set up context menu tree at install time.
+chrome.runtime.onInstalled.addListener(function () {
+
+    let context = "image";
+    let title = "Upload to Chevereto ";
+    let id = chrome.contextMenus.create({
+        "title": title, "contexts": [context],
+        "id": "context" + context
+    });
+
+
+});

@@ -35,6 +35,7 @@
   "permissions": [
     "storage",
     "tabs",
+    "contextMenus",
     "<all_urls>"
   ]
 }
