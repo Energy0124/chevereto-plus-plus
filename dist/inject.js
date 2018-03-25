@@ -44,7 +44,7 @@
         transporter.dispatchEvent(event);
     }
 })("__rw_chrome_ext_1521921138510", "__rw_chrome_ext_reply_1521921138510");
-
+console.log("injected");
 CamanCHV = {};
 // CamanCHV.defaultFilters = {
 //     brightness: 0,
