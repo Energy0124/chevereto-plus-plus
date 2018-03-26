@@ -1,7 +1,5 @@
 import * as $ from 'jquery';
-import htmlString = JQuery.htmlString;
 
-// let count = 0;
 
 $(function () {
     let uploadQueue = [];
@@ -28,6 +26,14 @@ $(function () {
     $('#showUploadQueue').click(() => {
         $("#queue").slideToggle();
     });
+    $('#upload').click(() => {
+        //for sending a message
+        chrome.runtime.sendMessage({type: "openTab"}, function(response) {
+
+        });
+
+
+    });
     // const queryInfo = {
     //     active: true,
     //     currentWindow: true
@@ -40,22 +46,22 @@ $(function () {
     //
 
 
-    chrome.storage.onChanged.addListener(function (changes, namespace) {
-        if ("uploadQueue" in changes) {
-            let storageChange = changes["uploadQueue"];
-            console.log('Storage key "%s" in namespace "%s" changed. ' +
-                'Old value was "%s", new value is "%s".',
-                "uploadQueue",
-                namespace,
-                storageChange.oldValue,
-                storageChange.newValue);
-
-            // uploadQueue = storageChange.newValue;
-            // count = uploadQueue.length;
-            // chrome.browserAction.setBadgeText({text: '' + count});
-        }
-
-    });
+    // chrome.storage.onChanged.addListener(function (changes, namespace) {
+    //     if ("uploadQueue" in changes) {
+    //         let storageChange = changes["uploadQueue"];
+    //         console.log('Storage key "%s" in namespace "%s" changed. ' +
+    //             'Old value was "%s", new value is "%s".',
+    //             "uploadQueue",
+    //             namespace,
+    //             storageChange.oldValue,
+    //             storageChange.newValue);
+    //
+    //         // uploadQueue = storageChange.newValue;
+    //         // count = uploadQueue.length;
+    //         // chrome.browserAction.setBadgeText({text: '' + count});
+    //     }
+    //
+    // });
     // $('#countUp').click(() => {
     //     chrome.browserAction.setBadgeText({text: '' + count++});
     // });

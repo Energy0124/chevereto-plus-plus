@@ -1,3 +1,6 @@
+import * as $ from 'jquery';
+
+
 chrome.storage.sync.get({
     chevereto_hostname: "http://localhost/"
 }, function (items: { chevereto_hostname }) {
@@ -22,6 +25,26 @@ chrome.storage.sync.get({
             this.remove();
         };
         (document.head || document.documentElement).appendChild(c);
+
+
+        chrome.runtime.onMessage.addListener(
+            function (message, sender, sendResponse) {
+                switch (message.type) {
+                    case "upload":
+                        // console.log(message.uploadQueue);
+                        let uploadQueue = message.uploadQueue;
+                        sendResponse("ok");
+                        $("li[data-action=top-bar-upload]")[0].click();
+                        //CHV.fn.uploader.add({}, urlvalues);
+                        let urlvalues = uploadQueue.join(" ");
+                        // console.log("url!!!!!:"+urlvalues);
+                        location.href = `javascript:CHV.fn.uploader.add({}, "${urlvalues}"); void 0`;
+                        // console.log("set href")
+                        break;
+                }
+            }
+        );
+
 
 // Random unique name, to be used to minimize conflicts:
 // let EVENT_FROM_PAGE = '__rw_chrome_ext_' + new Date().getTime();

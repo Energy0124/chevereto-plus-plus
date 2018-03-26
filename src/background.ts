@@ -34,6 +34,52 @@ chrome.storage.sync.get(['uploadQueue'], function (result) {
 });
 
 
+//for listening any message which comes from runtime
+chrome.runtime.onMessage.addListener(messageReceived);
+
+function messageReceived(message, sender, sendResponse) {
+    if (message && message.type == "openTab") {
+        chrome.storage.sync.get({
+            uploadQueue: [],
+            chevereto_hostname: "http://localhost/"
+        }, function (items: { chevereto_hostname, uploadQueue }) {
+            let uploadQueue = items.uploadQueue;
+            let newURL = items.chevereto_hostname;
+            chrome.tabs.create({url: newURL},
+                tab => {
+                    chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+                        if (info.status === 'complete' && tabId === tab.id) {
+                            chrome.tabs.onUpdated.removeListener(listener);
+                            //done loading, do stuff
+                            chrome.tabs.sendMessage(tab.id, {
+                                type: "upload",
+                                uploadQueue: uploadQueue
+                            }, function responseCallback(response) {
+                                console.log(response);
+                                if (response != "ok") {
+                                    chrome.tabs.sendMessage(tab.id, {
+                                        type: "upload",
+                                        uploadQueue: uploadQueue
+                                    }, responseCallback);
+                                } else {
+                                    chrome.storage.sync.clear(
+                                        function () {
+                                            uploadQueue = [];
+                                            let count = uploadQueue.length;
+                                            chrome.browserAction.setBadgeText({text: '' + count});
+
+                                        }
+                                    );
+                                }
+
+                            });
+                        }
+                    });
+                });
+        });
+    }
+}
+
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (message && message.type == 'page') {
         var page_message = message.message;
