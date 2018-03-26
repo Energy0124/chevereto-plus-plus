@@ -8,11 +8,11 @@
             fid: fid
         }, function (response) {
             // alert('Background said: ' + response);
-            console.log(response);
+            // console.log(response);
             var event = new CustomEvent('getDataFromBackground', {detail: response});
             window.dispatchEvent(event);
         });
-        console.log("send convert to dataurl");
+        // console.log("send convert to dataurl");
     };
 
     // window.hello = function (string) {
@@ -81,6 +81,27 @@ CamanCHV.presetsTEMP = [];
 //     sharpen: 0,
 //     stackBlur: 0
 // };
+window.addEventListener("getDataFromBackground", function bgListener(e) {
+    let result = e.detail;
+    let fid = result.split(/@(.+)/)[0];
+    let url = result.split(/@(.+)/)[1];
+    // console.log("fid: " + fid);
+    fetch(url)
+        .then(res => res.blob())
+        .then((blob) => {
+            let originalFile = CHV.fn.uploader.files[fid];
+            let file = new File([blob], originalFile.name, {
+                type: originalFile.type,
+                lastModified: originalFile.lastModified
+            });
+            file.parsedMeta = originalFile.parsedMeta;
+            file.formValues = originalFile.formValues;
+            CHV.fn.uploader.files[fid] = file;
+            CamanCHV.files[fid] = $.extend(true, [], CHV.fn.uploader.files)[fid];
+            // window.removeEventListener("getDataFromBackground", bgListener);
+        })
+});
+
 
 CHV.fn.uploader.add = (function () {
     let cached_function = CHV.fn.uploader.add;
@@ -138,26 +159,7 @@ CHV.fn.uploader.add = (function () {
                         // hello();
 
                         convertToDataUrl(f.url, fileId);
-                        window.addEventListener("getDataFromBackground", function bgListener(e) {
-                            let result = e.detail;
-                            let fid = result.split(/@(.+)/)[0];
-                            let url = result.split(/@(.+)/)[1];
-                            console.log("fid: " + fid);
-                            fetch(url)
-                                .then(res => res.blob())
-                                .then((blob) => {
-                                    let originalFile = CHV.fn.uploader.files[fid];
-                                    let file = new File([blob], originalFile.name, {
-                                        type: originalFile.type,
-                                        lastModified: originalFile.lastModified
-                                    });
-                                    file.parsedMeta = originalFile.parsedMeta;
-                                    file.formValues = originalFile.formValues;
-                                    CHV.fn.uploader.files[fid] = file;
-                                    CamanCHV.files[fid] = $.extend(true, [], CHV.fn.uploader.files)[fid];
-                                    window.removeEventListener("getDataFromBackground", bgListener);
-                                })
-                        });
+
                     } else {
 
                         CamanCHV.files[fileId] = $.extend(true, [], CHV.fn.uploader.files)[fileId];

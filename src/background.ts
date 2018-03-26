@@ -96,7 +96,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             // console.log(result);
             chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
                 chrome.tabs.sendMessage(tabs[0].id, {greeting: "hello", data: result, fid: message.request.fid}, function (response) {
-                    console.log(response.farewell);
+                    // console.log(response.farewell);
                 });
             });
             // Reply result to content script
@@ -114,14 +114,14 @@ function onClickHandler(info, tab) {
 
     let uploadQueue = [];
     chrome.storage.sync.get(['uploadQueue'], function (result) {
-        console.log('Value currently is ' + result.uploadQueue);
+        // console.log('Value currently is ' + result.uploadQueue);
         uploadQueue = result.uploadQueue;
         if (uploadQueue === undefined) {
             uploadQueue = [];
         }
         uploadQueue.push(info.srcUrl);
         chrome.storage.sync.set({uploadQueue: uploadQueue}, function () {
-            console.log('Value is set to ' + uploadQueue);
+            // console.log('Value is set to ' + uploadQueue);
 
             let count = uploadQueue.length;
             chrome.browserAction.setBadgeText({text: '' + count});

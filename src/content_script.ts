@@ -75,9 +75,9 @@ chrome.storage.sync.get({
                         //     "from a content script:" + sender.tab.url :
                         //     "from the extension");
                         if (request.greeting == "hello") {
-                            console.log("got response 2");
-                            console.log(request.fid);
-                            console.log(request.data);
+                            // console.log("got response 2");
+                            // console.log(request.fid);
+                            // console.log(request.data);
                             // Received message from background, pass to page
                             var event = document.createEvent('Events');
                             event.initEvent(EVENT_REPLY, false, false);
@@ -91,7 +91,7 @@ chrome.storage.sync.get({
                     type: 'page',
                     request: request
                 }, function (data) {
-                    console.log("get reponse" + data);
+                    // console.log("get reponse" + data);
                     // Received message from background, pass to page
                     // var event = document.createEvent('Events');
                     // event.initEvent(EVENT_REPLY, false, false);
