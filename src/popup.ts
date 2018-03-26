@@ -4,13 +4,13 @@ import * as $ from 'jquery';
 $(function () {
     let uploadQueue = [];
     chrome.storage.sync.get(['uploadQueue'], function (result) {
-        console.log('Value currently is ' + result.uploadQueue);
+        // console.log('Value currently is ' + result.uploadQueue);
 
         uploadQueue = result.uploadQueue;
         if (uploadQueue === undefined) {
             uploadQueue = [];
         }
-        console.log(uploadQueue);
+        // console.log(uploadQueue);
         $("#queueCount").html(uploadQueue.length.toString());
 
         $("#queue").find("ul").html("");
@@ -26,9 +26,23 @@ $(function () {
     $('#showUploadQueue').click(() => {
         $("#queue").slideToggle();
     });
+    $('#clearQueue').click(() => {
+        chrome.storage.sync.clear(
+            function () {
+                uploadQueue = [];
+                let count = uploadQueue.length;
+                chrome.browserAction.setBadgeText({text: '' + count});
+                $("#queue").find("ul").html("");
+                $("#queueCount").html(uploadQueue.length.toString());
+                $("#queue").slideToggle();
+
+
+            }
+        );
+    });
     $('#upload').click(() => {
         //for sending a message
-        chrome.runtime.sendMessage({type: "openTab"}, function(response) {
+        chrome.runtime.sendMessage({type: "openTab"}, function (response) {
 
         });
 

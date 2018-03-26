@@ -10,7 +10,7 @@ chrome.storage.sync.get({
 
 //load inject
         let s = document.createElement('script');
-// TODO: add "script.js" to web_accessible_resources in manifest.json
+
         s.src = chrome.extension.getURL('inject.js');
         s.onload = function () {
             this.remove();
@@ -19,7 +19,7 @@ chrome.storage.sync.get({
 
 //load caman
         let c = document.createElement('script');
-// TODO: add "script.js" to web_accessible_resources in manifest.json
+
         c.src = chrome.extension.getURL('caman.full.js');
         c.onload = function () {
             this.remove();
