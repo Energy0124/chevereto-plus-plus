@@ -115,10 +115,16 @@ CHV.fn.uploader.add = (function () {
         // console.log("added!");
 
 
-        $("button[data-action=upload], div.upload-box-close").click(function () {
+        $("div.upload-box-close").click(function () {
             CamanCHV.filters = [];
             CamanCHV.presets = [];
             CamanCHV.files = [];
+        });
+        $("button[data-action=upload]").click(function () {
+            CamanCHV.filters = [];
+            CamanCHV.presets = [];
+            $("#anywhere-upload-queue > li > button").remove();
+            // CamanCHV.files = [];
         });
         $("#anywhere-upload-queue").find(".queue-item").each(function () {
 
