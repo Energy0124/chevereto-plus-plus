@@ -62,7 +62,7 @@ function messageReceived(message, sender, sendResponse) {
                                         uploadQueue: uploadQueue
                                     }, responseCallback);
                                 } else {
-                                    chrome.storage.sync.clear(
+                                    chrome.storage.sync.set({uploadQueue: []},
                                         function () {
                                             uploadQueue = [];
                                             let count = uploadQueue.length;
@@ -95,7 +95,11 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             result = canvas.toDataURL();
             // console.log(result);
             chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
-                chrome.tabs.sendMessage(tabs[0].id, {greeting: "hello", data: result, fid: message.request.fid}, function (response) {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    greeting: "hello",
+                    data: result,
+                    fid: message.request.fid
+                }, function (response) {
                     // console.log(response.farewell);
                 });
             });

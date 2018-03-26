@@ -27,7 +27,7 @@ $(function () {
         $("#queue").slideToggle();
     });
     $('#clearQueue').click(() => {
-        chrome.storage.sync.clear(
+        chrome.storage.sync.set({uploadQueue: []},
             function () {
                 uploadQueue = [];
                 let count = uploadQueue.length;
