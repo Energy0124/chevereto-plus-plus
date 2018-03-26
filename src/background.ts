@@ -95,8 +95,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             result = canvas.toDataURL();
             // console.log(result);
             chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
-                chrome.tabs.sendMessage(tabs[0].id, {greeting: "hello", data: result}, function (response) {
-                    // console.log(response.farewell);
+                chrome.tabs.sendMessage(tabs[0].id, {greeting: "hello", data: result, fid: message.request.fid}, function (response) {
+                    console.log(response.farewell);
                 });
             });
             // Reply result to content script

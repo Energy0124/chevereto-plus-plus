@@ -1,26 +1,28 @@
 (function (send_event_name, reply_event_name) {
     // NOTE: This function is serialized and runs in the page's context
     // Begin of the page's functionality
-    window['convertToDataUrl'] = function (string) {
+    window['convertToDataUrl'] = function (string, fid) {
         sendMessage({
             type: 'toDataUrl',
-            data: string
+            data: string,
+            fid: fid
         }, function (response) {
             // alert('Background said: ' + response);
-            // console.log(response);
+            console.log(response);
             var event = new CustomEvent('getDataFromBackground', {detail: response});
             window.dispatchEvent(event);
         });
+        console.log("send convert to dataurl");
     };
 
-    window.hello = function (string) {
-        sendMessage({
-            type: 'sayhello',
-            data: string
-        }, function (response) {
-            alert('Background said: ' + response);
-        });
-    };
+    // window.hello = function (string) {
+    //     sendMessage({
+    //         type: 'sayhello',
+    //         data: string
+    //     }, function (response) {
+    //         alert('Background said: ' + response);
+    //     });
+    // };
 
     // End of your logic, begin of messaging implementation:
     function sendMessage(message, callback) {
@@ -90,7 +92,13 @@ CHV.fn.uploader.add = (function () {
 
         // more of your code
         // console.log("added!");
-        // todo: check case for url image
+
+
+        $("button[data-action=upload], div.upload-box-close").click(function () {
+            CamanCHV.filters = [];
+            CamanCHV.presets = [];
+            CamanCHV.files = [];
+        });
         $("#anywhere-upload-queue").find(".queue-item").each(function () {
 
             if ($("button", this).length == 0) {
@@ -101,27 +109,53 @@ CHV.fn.uploader.add = (function () {
 
                 check(function (fileId) {
                     // It's there now, use it
+
+                    $(`.queue-item[data-id=${fileId}] div.queue-item-button.cancel.hover-display`).click(function () {
+
+
+                        CamanCHV.filters[fileId] = {
+                            brightness: 0,
+                            contrast: 0,
+                            saturation: 0,
+                            vibrance: 0,
+                            exposure: 0,
+                            hue: 0,
+                            sepia: 0,
+                            gamma: 0,
+                            noise: 0,
+                            clip: 0,
+                            sharpen: 0,
+                            stackBlur: 0
+                        };
+                        CamanCHV.presets[fileId] = "";
+                        CamanCHV.files[fileId] = undefined;
+
+                    });
                     let f = CHV.fn.uploader.files[fileId];
                     let queue_is_url = typeof f.url !== "undefined";
 
                     if (queue_is_url) {
                         // hello();
 
-                        convertToDataUrl(f.url);
-                        window.addEventListener("getDataFromBackground", function (e) {
-                            let url = e.detail;
+                        convertToDataUrl(f.url, fileId);
+                        window.addEventListener("getDataFromBackground", function bgListener(e) {
+                            let result = e.detail;
+                            let fid = result.split(/@(.+)/)[0];
+                            let url = result.split(/@(.+)/)[1];
+                            console.log("fid: " + fid);
                             fetch(url)
                                 .then(res => res.blob())
-                                .then(function (blob) {
-                                    let originalFile = CHV.fn.uploader.files[fileId];
+                                .then((blob) => {
+                                    let originalFile = CHV.fn.uploader.files[fid];
                                     let file = new File([blob], originalFile.name, {
                                         type: originalFile.type,
                                         lastModified: originalFile.lastModified
                                     });
                                     file.parsedMeta = originalFile.parsedMeta;
                                     file.formValues = originalFile.formValues;
-                                    CHV.fn.uploader.files[fileId] = file;
-                                    CamanCHV.files[fileId] = $.extend(true, [], CHV.fn.uploader.files)[fileId];
+                                    CHV.fn.uploader.files[fid] = file;
+                                    CamanCHV.files[fid] = $.extend(true, [], CHV.fn.uploader.files)[fid];
+                                    window.removeEventListener("getDataFromBackground", bgListener);
                                 })
                         });
                     } else {
@@ -139,7 +173,7 @@ CHV.fn.uploader.add = (function () {
                     if ($this.data("id") !== undefined) {
                         setTimeout(callback.bind(null, $this.data("id")), 0);
                     } else {
-                        if (Date.now() - started > 1000) { // 1000ms = one second
+                        if (Date.now() - started > 10000) { // 1000ms = one second
                             // Fail with message
                         } else {
                             setTimeout(check.bind(null, callback, $this), 0);
@@ -176,6 +210,13 @@ CHV.fn.uploader.add = (function () {
                     }
                     CamanCHV.presets[id] = "";
                     // console.log(id);
+                    let f = CHV.fn.uploader.files[id];
+                    let queue_is_url = typeof f.url !== "undefined";
+
+                    if (queue_is_url) {
+                        convertToDataUrl(f.url, id);
+                    }
+
                     PF.fn.modal.call({
                         type: "html",
                         callback: function () {
@@ -353,10 +394,6 @@ CHV.fn.uploader.add = (function () {
                             // }
 
 
-                            $("button[data-action=upload], div.upload-box-close").click(function () {
-                                CamanCHV.filters = [];
-                                CamanCHV.presets = [];
-                            });
                             $(`#reset-image`).click(function () {
                                 Caman("#caman-canvas", function () {
                                     CamanCHV.filters[id] = {
@@ -634,3 +671,11 @@ CHV.fn.uploader.add = (function () {
         return result;
     };
 })();
+
+
+let evt = document.createEvent('Event');
+evt.initEvent('addUrls', true, false);
+// console.log("addUrls")
+
+// fire the event
+document.dispatchEvent(evt);

@@ -26,6 +26,7 @@ chrome.storage.sync.get({
         };
         (document.head || document.documentElement).appendChild(c);
 
+        // console.log("chrome.runtime.onMessage.addListener(");
 
         chrome.runtime.onMessage.addListener(
             function (message, sender, sendResponse) {
@@ -38,8 +39,15 @@ chrome.storage.sync.get({
                         //CHV.fn.uploader.add({}, urlvalues);
                         let urlvalues = uploadQueue.join(" ");
                         // console.log("url!!!!!:"+urlvalues);
+                        document.addEventListener('addUrls', function () {
+                            // do whatever is necessary
+                            location.href = `javascript:CHV.fn.uploader.add({}, "${urlvalues}"); void 0`;
+                            // console.log("set href 1")
+
+                        });
                         location.href = `javascript:CHV.fn.uploader.add({}, "${urlvalues}"); void 0`;
-                        // console.log("set href")
+                        // console.log("set href 2")
+                        // console.log("try to add set href")
                         break;
                 }
             }
@@ -67,11 +75,13 @@ chrome.storage.sync.get({
                         //     "from a content script:" + sender.tab.url :
                         //     "from the extension");
                         if (request.greeting == "hello") {
-                            // console.log(request.data);
+                            console.log("got response 2");
+                            console.log(request.fid);
+                            console.log(request.data);
                             // Received message from background, pass to page
                             var event = document.createEvent('Events');
                             event.initEvent(EVENT_REPLY, false, false);
-                            transporter.setAttribute('result', JSON.stringify(request.data));
+                            transporter.setAttribute('result', JSON.stringify(request.fid + "@" + request.data));
                             transporter.dispatchEvent(event);
                             sendResponse({farewell: "goodbye"});
                         }
@@ -81,6 +91,7 @@ chrome.storage.sync.get({
                     type: 'page',
                     request: request
                 }, function (data) {
+                    console.log("get reponse" + data);
                     // Received message from background, pass to page
                     // var event = document.createEvent('Events');
                     // event.initEvent(EVENT_REPLY, false, false);
