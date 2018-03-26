@@ -21,7 +21,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
 
 chrome.storage.sync.get(['uploadQueue'], function (result) {
-    console.log('Value currently is ' + result.uploadQueue);
+    // console.log('Value currently is ' + result.uploadQueue);
     let uploadQueue = [];
     uploadQueue = result.uploadQueue;
     if (uploadQueue === undefined) {
